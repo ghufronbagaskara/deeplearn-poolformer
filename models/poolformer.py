@@ -20,9 +20,15 @@ import torch
 import torch.nn as nn
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from timm.models.layers import DropPath, trunc_normal_
-from timm.models.registry import register_model
-from timm.models.layers.helpers import to_2tuple
+try:
+    # timm >= 0.9.0 (new location)
+    from timm.layers import DropPath, trunc_normal_, to_2tuple
+    from timm.models import register_model
+except ImportError:
+    # timm < 0.9.0 (old location)
+    from timm.models.layers import DropPath, trunc_normal_
+    from timm.models.registry import register_model
+    from timm.models.layers.helpers import to_2tuple
 
 
 try:
