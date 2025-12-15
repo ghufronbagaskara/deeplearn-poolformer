@@ -1,45 +1,134 @@
-# PoolFormer: [MetaFormer Is Actually What You Need for Vision](https://arxiv.org/abs/2111.11418) (CVPR 2022 Oral)
+# Improving PoolFormer via Lightweight Pooling and Activation Modifications
 
 <p align="center">
-<a href="https://arxiv.org/abs/2111.11418" alt="arXiv">
-    <img src="https://img.shields.io/badge/arXiv-2111.11418-b31b1b.svg?style=flat" /></a>
-<a href="https://huggingface.co/spaces/akhaliq/poolformer" alt="Hugging Face Spaces">
-    <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue" /></a>
-<a href="https://colab.research.google.com/drive/1n1UK4ihfiySTWTDuusAhm_6CLm1h4bTj?usp=sharing" alt="Colab">
-    <img src="https://colab.research.google.com/assets/colab-badge.svg" /></a>
+    <img src="https://img.shields.io/badge/Project-Deep%20Learning-blue" />
+    <img src="https://img.shields.io/badge/Dataset-CIFAR--100-green" />
+    <img src="https://img.shields.io/badge/Framework-PyTorch-orange" />
+    <img src="https://img.shields.io/badge/Status-Completed-success" />
 </p>
 
+This repository contains the official implementation of the final project **"Improving PoolFormer via Lightweight Pooling and Activation Modifications"**. 
 
----
-:fire: :fire: Our follow-up work "[MetaFormer Baselines for Vision](https://arxiv.org/abs/2210.13452)" (code: [metaformer](https://github.com/sail-sg/metaformer)) introduces more MetaFormer baselines including
-+ **IdentityFormer** with token mixer of identity mapping surprisingly achieve >80% accuracy.
-+ **RandFormer** achieves >81% accuracy by random token mixing, demonstrating MetaForemr works well with arbitrary token mixers.
-+ **ConvFormer** with token mixer of separable convolution significantly outperforms ConvNeXt by large margin.
-+ **CAFormer** with token mixers of separable convolutions and vanilla self-attention sets new record on ImageNet-1K.
+We explore lightweight architectural refinements to the original [PoolFormer](https://arxiv.org/abs/2111.11418) (CVPR 2022) to enhance its performance on fine-grained classification tasks (CIFAR-100) while preserving its simplicity and efficiency.
 
 ---
 
+## 🚀 Project Overview
 
-This is a PyTorch implementation of **PoolFormer** proposed by our paper "[MetaFormer Is Actually What You Need for Vision](https://arxiv.org/abs/2111.11418)" (CVPR 2022 Oral).
+Recent studies suggest that the effectiveness of Transformer-based vision models arises more from their overall architectural design (**MetaFormer**) than from specific token mixing mechanisms. 
 
+**PoolFormer**, a simple instantiation of MetaFormer, uses basic Average Pooling. While efficient, we hypothesize that Average Pooling tends to smooth out discriminative features, which restricts performance on fine-grained datasets like CIFAR-100.
 
-**Note**: Instead of designing complicated token mixer to achieve SOTA performance, the target of this work is to demonstrate the competence of Transformer models largely stem from the general architecture MetaFormer. Pooling/PoolFormer are just the tools to support our claim. 
+### 💡 Proposed Optimizations
+We propose two principled, parameter-free modifications to the architecture:
 
-![MetaFormer](https://user-images.githubusercontent.com/49296856/177275244-13412754-3d49-43ef-a8bd-17c0874c02c1.png)
-Figure 1: **MetaFormer and performance of MetaFormer-based models on ImageNet-1K validation set.** 
-We argue that the competence of Transformer/MLP-like models primarily stem from the general architecture MetaFormer instead of the equipped specific token mixers.
-To demonstrate this, we exploit an embarrassingly simple non-parametric operator, pooling, to conduct extremely basic token mixing. 
-Surprisingly, the resulted model PoolFormer consistently outperforms the DeiT and ResMLP as shown in (b), which well supports that MetaFormer is actually what we need to achieve competitive performance. RSB-ResNet in (b) means the results are from “ResNet Strikes Back” where ResNet is trained with improved training procedure for 300 epochs.
+1.  **Token Mixer: Max Pooling (vs. Avg Pooling)**
+    * **Mechanism:** Replaces uniform averaging with feature selection.
+    * **Benefit:** Preserves dominant local features (edges, textures) crucial for distinguishing fine-grained classes.
 
+2.  **Activation: SiLU / Swish (vs. GELU)**
+    * **Mechanism:** Uses $x \cdot \sigma(x)$ which allows for smoother gradient propagation.
+    * **Benefit:** Improves optimization stability and convergence speed.
+
+---
+
+## 📊 Experimental Results
+
+We conducted controlled experiments on CIFAR-100 under a limited training budget (10 epochs) to analyze early-stage learning dynamics. The results show consistent improvements in accuracy and convergence speed.
+
+### 1. Architecture Modification
+The diagram below illustrates the structural difference between the original and our improved block.
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/49296856/205430159-54bba545-520e-4ab8-8a77-278d90b54ec4.png" alt="PoolFormer"/>
+  <img src="./images/figure1_block_comparison.png" width="90%" alt="Figure 1: Block Comparison">
+  <br>
+  <em><strong>Figure 1:</strong> Comparison between Original PoolFormer Block (Left) and Improved Block (Right). We replace AvgPool with MaxPool and GELU with SiLU.</em>
 </p>
 
-Figure 2: (a) **The overall framework of PoolFormer.** (b) **The architecture of PoolFormer block.** Compared with Transformer block, it replaces attention with an extremely simple non-parametric operator, pooling, to conduct only basic token mixing.
+### 2. Training Dynamics (Accuracy)
+Our improved model (Blue) demonstrates significantly faster learning capability compared to the baseline (Red).
 
-## Bibtex
+<p align="center">
+  <img src="./images/figure2_accuracy_curves.png" width="100%" alt="Figure 2: Accuracy Curves">
+  <br>
+  <em><strong>Figure 2:</strong> Training and Test accuracy comparison over 10 epochs. The improved model consistently leads in both metrics.</em>
+</p>
+
+### 3. Final Performance Comparison
+After the 10-epoch training budget, the improved model achieves a clear performance gap.
+
+<p align="center">
+  <img src="./images/figure3_accuracy_bar.png" width="70%" alt="Figure 3: Final Bar Chart">
+  <br>
+  <em><strong>Figure 3:</strong> Accuracy Comparison after 10 Training Epochs on CIFAR-100. We achieved a <strong>+5.30%</strong> gain in Test Accuracy.</em>
+</p>
+
+### 4. Convergence Analysis (Loss)
+The loss curve indicates that our modifications facilitate better gradient flow and faster optimization.
+
+<p align="center">
+  <img src="./images/figure4_loss_curve.png" width="80%" alt="Figure 4: Loss Curve">
+  <br>
+  <em><strong>Figure 4:</strong> Training Loss Comparison. The improved model converges faster and achieves lower loss values.</em>
+</p>
+
+---
+
+## 📈 Quantitative Summary
+
+| Metric | Baseline (AvgPool + GELU) | Improved (MaxPool + SiLU) | Improvement |
+| :--- | :---: | :---: | :---: |
+| **Training Accuracy** | 58.41% | **71.61%** | <span style="color:green">**+13.20%**</span> |
+| **Test Accuracy** | 50.00% | **55.30%** | <span style="color:green">**+5.30%**</span> |
+
+> *Note: Results based on 10-epoch rapid prototyping experiments.*
+
+---
+
+## 🛠️ Installation & Usage
+
+### Requirements
+* Python 3.8+
+* PyTorch >= 1.7.0
+* `timm` library
+* `torchvision`
+
+```bash
+# Clone the repository
+git clone https://github.com/ghufronbagaskara/deeplearn-poolformer.git
+cd deeplearn-poolformer
+
+# Install dependencies
+pip install torch torchvision timm
 ```
+
+### Running Experiments
+
+We provide an enhanced `run_experiment.py` script with built-in checkpointing and metrics logging.
+
+```bash
+# 1. Train from scratch (Reset previous progress)
+python run_experiment.py --reset --epochs 10 --batch-size 32
+
+# 2. Resume training (if interrupted)
+python run_experiment.py --resume
+
+# 3. Customize Hyperparameters (e.g., for RTX 4060)
+python run_experiment.py --epochs 20 --lr 1e-4
+```
+
+-----
+
+## 📜 Context & Citation
+
+This project is built upon the research presented in **"MetaFormer Is Actually What You Need for Vision"** (CVPR 2022).
+
+**Original Paper:** [arXiv:2111.11418](https://arxiv.org/abs/2111.11418)  
+**Original Repository:** [sail-sg/poolformer](https://github.com/sail-sg/poolformer)
+
+If you use the original PoolFormer architecture, please cite:
+
+```bibtex
 @inproceedings{yu2022metaformer,
   title={Metaformer is actually what you need for vision},
   author={Yu, Weihao and Luo, Mi and Zhou, Pan and Si, Chenyang and Zhou, Yichen and Wang, Xinchao and Feng, Jiashi and Yan, Shuicheng},
@@ -49,97 +138,13 @@ Figure 2: (a) **The overall framework of PoolFormer.** (b) **The architecture of
 }
 ```
 
-**Detection and instance segmentation on COCO** configs and trained models are [here](detection/).
+-----
 
-**Semantic segmentation on ADE20K** configs and trained models are [here](segmentation/).
+### 👥 Authors (Group 5)
 
-The code to visualize Grad-CAM activation maps of PoolFomer, DeiT, ResMLP, ResNet and Swin are [here](misc/cam_image.py).
+  * Nugraha Billy Viandy
+  * Ghufron Bagaskara
+  * Muhammad Danish Alfattah Lubis
+  * Yusrizal Harits Firdauss
 
-The code to measure MACs are [here](misc/mac_count_with_fvcore.py).
-
-## Image Classification
-### 1. Requirements
-
-torch>=1.7.0; torchvision>=0.8.0; pyyaml; [apex-amp](https://github.com/NVIDIA/apex) (if you want to use fp16); [timm](https://github.com/rwightman/pytorch-image-models) (`pip install git+https://github.com/rwightman/pytorch-image-models.git@9d6aad44f8fd32e89e5cca503efe3ada5071cc2a`)
-
-data prepare: ImageNet with the following folder structure, you can extract ImageNet by this [script](https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4).
-
-```
-│imagenet/
-├──train/
-│  ├── n01440764
-│  │   ├── n01440764_10026.JPEG
-│  │   ├── n01440764_10027.JPEG
-│  │   ├── ......
-│  ├── ......
-├──val/
-│  ├── n01440764
-│  │   ├── ILSVRC2012_val_00000293.JPEG
-│  │   ├── ILSVRC2012_val_00002138.JPEG
-│  │   ├── ......
-│  ├── ......
-```
-
-
-
-### 2. PoolFormer Models
-
-| Model    |  #Params | Image resolution | #MACs* | Top1 Acc| Download | 
-| :---     |   :---:    |  :---: |  :---: |  :---:  |  :---:  |
-| poolformer_s12  |    12M     |   224  |  1.8G |  77.2  | [here](https://github.com/sail-sg/poolformer/releases/download/v1.0/poolformer_s12.pth.tar) |
-| poolformer_s24 |   21M     |   224 | 3.4G | 80.3  | [here](https://github.com/sail-sg/poolformer/releases/download/v1.0/poolformer_s24.pth.tar) |
-| poolformer_s36  |   31M     |   224 | 5.0G | 81.4  | [here](https://github.com/sail-sg/poolformer/releases/download/v1.0/poolformer_s36.pth.tar) |
-| poolformer_m36 |   56M     |   224 | 8.8G | 82.1  | [here](https://github.com/sail-sg/poolformer/releases/download/v1.0/poolformer_m36.pth.tar) |
-| poolformer_m48  |   73M     |   224 | 11.6G | 82.5  | [here](https://github.com/sail-sg/poolformer/releases/download/v1.0/poolformer_m48.pth.tar) | 
-
-
-All the pretrained models can also be downloaded by [BaiDu Yun](https://pan.baidu.com/s/1HSaJtxgCkUlawurQLq87wQ) (password: esac). * For convenient comparison with future models, we update the numbers of MACs counted by [fvcore](https://github.com/facebookresearch/fvcore) library ([example code](misc/mac_count_with_fvcore.py)) which are also reported in the [new arXiv version](https://arxiv.org/abs/2111.11418).
-
-
-#### Web Demo
-
-Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/poolformer)
-
-
-
-#### Usage
-We also provide a Colab notebook which run the steps to perform inference with poolformer: [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1n1UK4ihfiySTWTDuusAhm_6CLm1h4bTj?usp=sharing)
-
-
-### 3. Validation
-
-To evaluate our PoolFormer models, run:
-
-```bash
-MODEL=poolformer_s12 # poolformer_{s12, s24, s36, m36, m48}
-python3 validate.py /path/to/imagenet  --model $MODEL -b 128 \
-  --pretrained # or --checkpoint /path/to/checkpoint 
-```
-
-
-
-### 4. Train
-We show how to train PoolFormers on 8 GPUs. The relation between learning rate and batch size is lr=bs/1024*1e-3.
-For convenience, assuming the batch size is 1024, then the learning rate is set as 1e-3 (for batch size of 1024, setting the learning rate as 2e-3 sometimes sees better performance). 
-
-
-```bash
-MODEL=poolformer_s12 # poolformer_{s12, s24, s36, m36, m48}
-DROP_PATH=0.1 # drop path rates [0.1, 0.1, 0.2, 0.3, 0.4] responding to model [s12, s24, s36, m36, m48]
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 ./distributed_train.sh 8 /path/to/imagenet \
-  --model $MODEL -b 128 --lr 1e-3 --drop-path $DROP_PATH --apex-amp
-```
-
-### 5. Visualization
-![gradcam](https://user-images.githubusercontent.com/15921929/201674709-024a5356-42f2-433d-89e7-801c23646211.png)
-
-The code to visualize Grad-CAM activation maps of PoolFomer, DeiT, ResMLP, ResNet and Swin are [here](misc/cam_image.py).
-
-
-## Acknowledgment
-Our implementation is mainly based on the following codebases. We gratefully thank the authors for their wonderful works.
-
-[pytorch-image-models](https://github.com/rwightman/pytorch-image-models), [mmdetection](https://github.com/open-mmlab/mmdetection), [mmsegmentation](https://github.com/open-mmlab/mmsegmentation).
-
-
-Besides, Weihao Yu would like to thank TPU Research Cloud (TRC) program for the support of partial computational resources.
+*Informatics Engineering, Universitas Brawijaya*
