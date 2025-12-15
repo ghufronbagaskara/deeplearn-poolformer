@@ -20,9 +20,15 @@ import torch
 import torch.nn as nn
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from timm.models.layers import DropPath, trunc_normal_
-from timm.models.registry import register_model
-from timm.models.layers.helpers import to_2tuple
+try:
+    # timm >= 0.9.0 (new location)
+    from timm.layers import DropPath, trunc_normal_, to_2tuple
+    from timm.models import register_model
+except ImportError:
+    # timm < 0.9.0 (old location)
+    from timm.models.layers import DropPath, trunc_normal_
+    from timm.models.registry import register_model
+    from timm.models.layers.helpers import to_2tuple
 
 
 try:
@@ -119,8 +125,10 @@ class Pooling(nn.Module):
     """
     def __init__(self, pool_size=3):
         super().__init__()
-        self.pool = nn.AvgPool2d(
-            pool_size, stride=1, padding=pool_size//2, count_include_pad=False)
+        # === OPTIMASI 1: AvgPool → MaxPool ===
+        # Menangkap fitur dominan/terkuat untuk dataset dengan detail penting
+        self.pool = nn.MaxPool2d(
+            kernel_size=pool_size, stride=1, padding=pool_size//2)
 
     def forward(self, x):
         return self.pool(x) - x
@@ -436,7 +444,9 @@ def poolformer_s12(pretrained=False, **kwargs):
     downsamples = [True, True, True, True]
     model = PoolFormer(
         layers, embed_dims=embed_dims, 
-        mlp_ratios=mlp_ratios, downsamples=downsamples, 
+        mlp_ratios=mlp_ratios, downsamples=downsamples,
+        pool_size=5,         # === OPTIMASI 2: 3→5 (Receptive field lebih luas) ===
+        act_layer=nn.SiLU,   # === OPTIMASI 3: GELU→SiLU (Gradient smooth) ===
         **kwargs)
     model.default_cfg = default_cfgs['poolformer_s']
     if pretrained:

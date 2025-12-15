@@ -1,0 +1,84 @@
+# ===============================
+# MARKDOWN FILES (DOCUMENTATION)
+# ===============================
+*.md
+**/*.md
+
+# ===============================
+# DATASETS / DATA DIRECTORY
+# ===============================
+data/
+**/data/
+**/datasets/
+**/dataset/
+
+# CIFAR / ImageNet / custom datasets
+**/cifar-100-python/
+**/cifar-10-batches-py/
+**/imagenet/
+**/*.zip
+**/*.tar
+**/*.tar.gz
+
+# ===============================
+# PYTHON CACHE & COMPILED FILES
+# ===============================
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# ===============================
+# VIRTUAL ENVIRONMENT
+# ===============================
+venv/
+.venv/
+env/
+ENV/
+
+# ===============================
+# LOGS & OUTPUTS
+# ===============================
+*.log
+logs/
+outputs/
+results/
+checkpoints/
+weights/
+
+# ===============================
+# EXPERIMENT / TEMP FILES
+# ===============================
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# ===============================
+# JUPYTER
+# ===============================
+.ipynb_checkpoints/
+
+# ===============================
+# OS & EDITOR FILES
+# ===============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ===============================
+# PYTORCH / ML SPECIFIC
+# ===============================
+*.pth
+*.pt
+*.onnx
+*.ckpt
+
+# ===============================
+# MISC
+# ===============================
+.cache/
